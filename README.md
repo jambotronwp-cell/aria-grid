@@ -21,3 +21,6 @@ to the npm registry of Gitea (`jambotron_gang`):
 
 A release: raise the version in `projects/aria-grid/package.json` (and `CHANGELOG`, if any), PR into `development`,
 then `development → staging`, check the staging package, then `staging → production` on the owner's word.
+
+Public releases are also published by hand to [npmjs.com](https://www.npmjs.com/package/@jambotron/aria-grid)
+(account `jambotron`): `npx ng build aria-grid && cd dist/aria-grid && npm publish --access public --registry https://registry.npmjs.org/`.

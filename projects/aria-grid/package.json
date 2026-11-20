@@ -1,6 +1,6 @@
 {
   "name": "@jambotron/aria-grid",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "peerDependencies": {
     "@angular/common": "^22.2.0",
     "@angular/core": "^22.2.0",
@@ -17,7 +17,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://gitea.jambotron.com/jambotron_gang/jambotron-aria-grid.git"
+    "url": "git+https://github.com/jambotronwp-cell/aria-grid.git"
   },
   "exports": {
     "./styles/*": {
@@ -34,5 +34,8 @@
     "data-grid",
     "table",
     "datagrid"
-  ]
+  ],
+  "bugs": {
+    "url": "https://github.com/jambotronwp-cell/aria-grid/issues"
+  }
 }

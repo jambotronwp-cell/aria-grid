@@ -12,10 +12,7 @@ Angular 22 with `@angular/aria`, `@angular/cdk`, `@angular/material` (peer depen
 
 ## Install
 
-From the Gitea npm registry of jambotron.com (after `npm publish`, see Develop):
-
 ```bash
-npm config set @jambotron:registry https://gitea.jambotron.com/api/packages/jambotron_gang/npm/
 npm install @jambotron/aria-grid
 ```
 
