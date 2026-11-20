@@ -1,0 +1,141 @@
+# @jambotron/aria-grid: development -> staging -> production, as in Jambotron (owner 2026-11-14: the same branches in
+# every repository, no main). The package goes to the npm registry of Gitea (jambotron_gang).
+#   pull request     -> tests + library build
+#   push staging     -> tests + build -> <version>-staging.<build> with dist-tag "staging" (try it in the demo / Jambotron:
+#                       npm i @jambotron/aria-grid@staging)
+#   push production  -> tests + build -> <version> with dist-tag "latest" — only when projects/aria-grid/package.json has
+#                       a version that is not in the registry yet; otherwise nothing to do (exit 78, green)
+# An npm package cannot be renamed like an image tag: production builds the same commit again (ng-packagr, same lock).
+# Drone secret: NPM_TOKEN (Gitea token with write:package in jambotron_gang). Until it is set, nothing is published.
+# 83.2 (owner 2026-11-15): tests run on jambotron-build (runner role: ci, no secrets); publishing (NPM_TOKEN) — on
+# vps-jambotron-staging (role: trusted), after the tests passed. In Drone, $$ is a literal $.
+kind: pipeline
+type: docker
+name: build-test
+node:
+  role: ci
+
+# Only PRs into development: staging -> production is the same code, already checked (owner 2026-11-15)
+trigger:
+  event:
+    - pull_request
+  branch:
+    - development
+
+steps:
+  - name: test-and-build
+    image: node:22-bookworm-slim
+    commands:
+      - npm ci --no-audit --no-fund
+      - npx ng test aria-grid --watch=false
+      - npx ng build aria-grid
+
+---
+kind: pipeline
+type: docker
+name: staging-test
+node:
+  role: ci
+
+concurrency:
+  limit: 1
+
+trigger:
+  event:
+    - push
+  branch:
+    - staging
+
+steps:
+  - name: test-and-build
+    image: node:22-bookworm-slim
+    commands:
+      - npm ci --no-audit --no-fund
+      - npx ng test aria-grid --watch=false
+      - npx ng build aria-grid
+
+---
+kind: pipeline
+type: docker
+name: staging-publish
+node:
+  role: trusted
+
+concurrency:
+  limit: 1
+
+trigger:
+  event:
+    - push
+  branch:
+    - staging
+
+# only after the tests on jambotron-build passed
+depends_on:
+  - staging-test
+
+steps:
+  - name: publish-staging
+    image: node:22-bookworm-slim
+    environment:
+      NPM_TOKEN:
+        from_secret: NPM_TOKEN
+    commands:
+      - 'if [ -z "$$NPM_TOKEN" ]; then echo "No NPM_TOKEN yet: tested, not published"; exit 0; fi'
+      - npm ci --no-audit --no-fund
+      - npx ng build aria-grid
+      - REG=gitea.jambotron.com/api/packages/jambotron_gang/npm/
+      - cd dist/aria-grid
+      - VERSION=$$(node -p "require('./package.json').version")
+      - npm version --no-git-tag-version "$$VERSION-staging.${DRONE_BUILD_NUMBER}" >/dev/null
+      - printf '//%s:_authToken=%s\n' "$$REG" "$$NPM_TOKEN" > .npmrc
+      - npm publish --registry "https://$$REG" --tag staging
+      - echo "published @jambotron/aria-grid@$$VERSION-staging.${DRONE_BUILD_NUMBER} (dist-tag staging)"
+
+---
+kind: pipeline
+type: docker
+name: production
+node:
+  role: trusted
+
+concurrency:
+  limit: 1
+
+trigger:
+  event:
+    - push
+  branch:
+    - production
+
+steps:
+  - name: version
+    image: node:22-bookworm-slim
+    environment:
+      NPM_TOKEN:
+        from_secret: NPM_TOKEN
+    commands:
+      - 'if [ -z "$$NPM_TOKEN" ]; then echo "No NPM_TOKEN yet: nothing published"; exit 78; fi'
+      - REG=gitea.jambotron.com/api/packages/jambotron_gang/npm/
+      - VERSION=$$(node -p "require('./projects/aria-grid/package.json').version")
+      - printf '//%s:_authToken=%s\n' "$$REG" "$$NPM_TOKEN" > /tmp/npmrc
+      - if npm view "@jambotron/aria-grid@$$VERSION" version --registry "https://$$REG" --userconfig /tmp/npmrc 2>/dev/null | grep -qx "$$VERSION"; then echo "$$VERSION is already published"; exit 78; fi
+      - echo "Publishing $$VERSION"
+
+  - name: test-and-build
+    image: node:22-bookworm-slim
+    commands:
+      - npm ci --no-audit --no-fund
+      - npx ng test aria-grid --watch=false
+      - npx ng build aria-grid
+
+  - name: publish
+    image: node:22-bookworm-slim
+    environment:
+      NPM_TOKEN:
+        from_secret: NPM_TOKEN
+    commands:
+      - REG=gitea.jambotron.com/api/packages/jambotron_gang/npm/
+      - cd dist/aria-grid
+      - printf '//%s:_authToken=%s\n' "$$REG" "$$NPM_TOKEN" > .npmrc
+      - npm publish --registry "https://$$REG" --tag latest

@@ -1,0 +1,12 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+// Focused as a grid cell's widget (before Enter): the cell shows the focus ring, the group itself has none
+:host:focus-visible {
+  outline: none;
+}

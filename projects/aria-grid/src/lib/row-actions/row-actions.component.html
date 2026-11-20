@@ -1,0 +1,38 @@
+@for (item of inline(); track item.value) {
+  <button matIconButton type="button" [disabled]="item.disabled" [matTooltip]="item.label" [attr.aria-label]="item.label"
+          (click)="action.emit(item.value)">
+    <mat-icon>{{ item.icon }}</mat-icon>
+  </button>
+}
+
+@if (menu().length || dangerous().length) {
+  <button matIconButton type="button" ngMenuTrigger #moreTrigger="ngMenuTrigger" [menu]="moreMenu()"
+          [matTooltip]="labels().moreActions"
+          [attr.aria-label]="labels().moreActions + (subject() ? ': ' + subject() : '')">
+    <mat-icon>more_vert</mat-icon>
+  </button>
+  <ng-template [cdkConnectedOverlayOpen]="moreTrigger.expanded()" cdkAttachPopoverAsChild (attach)="watchSize()" (detach)="stopWatching()"
+               [cdkConnectedOverlay]="{ origin: moreTrigger.element, usePopover: 'inline' }"
+               [cdkConnectedOverlayPositions]="[
+                 { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 4 },
+                 { originX: 'end', originY: 'top', overlayX: 'end', overlayY: 'bottom', offsetY: -4 }
+               ]">
+    <div ngMenu #moreMenu="ngMenu" class="jt-popup" (itemSelected)="onSelected($event)">
+      <ng-template ngMenuContent>
+        @for (item of menu(); track item.value) {
+          <div ngMenuItem class="jt-menu-item" [value]="item.value" [disabled]="!!item.disabled">
+            <mat-icon>{{ item.icon }}</mat-icon>{{ item.label }}
+          </div>
+        }
+        @if (menu().length && dangerous().length) {
+          <div class="jt-menu-separator" role="separator"></div>
+        }
+        @for (item of dangerous(); track item.value) {
+          <div ngMenuItem class="jt-menu-item jt-menu-item--danger" [value]="item.value" [disabled]="!!item.disabled">
+            <mat-icon>{{ item.icon }}</mat-icon>{{ item.label }}
+          </div>
+        }
+      </ng-template>
+    </div>
+  </ng-template>
+}

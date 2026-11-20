@@ -1,0 +1,38 @@
+{
+  "name": "@jambotron/aria-grid",
+  "version": "0.4.2",
+  "peerDependencies": {
+    "@angular/common": "^22.2.0",
+    "@angular/core": "^22.2.0",
+    "@angular/aria": "^22.2.0",
+    "@angular/cdk": "^22.2.0",
+    "@angular/material": "^22.2.0",
+    "rxjs": "^7.8.0"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "sideEffects": false,
+  "description": "Angular data grid on Angular Aria: sorting, paging, row selection, bulk and row actions, animations",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://gitea.jambotron.com/jambotron_gang/jambotron-aria-grid.git"
+  },
+  "exports": {
+    "./styles/*": {
+      "sass": "./styles/*.scss"
+    }
+  },
+  "homepage": "https://aria-grid-demo.jambocheck.com",
+  "author": "Jambotron (https://jambotron.com)",
+  "keywords": [
+    "angular",
+    "angular-aria",
+    "accessibility",
+    "a11y",
+    "data-grid",
+    "table",
+    "datagrid"
+  ]
+}

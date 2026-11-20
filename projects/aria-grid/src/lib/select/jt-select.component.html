@@ -1,0 +1,41 @@
+@if (label()) {
+  <span class="jt-select-label" aria-hidden="true">{{ label() }}</span>
+}
+
+<div ngCombobox #combobox="ngCombobox"
+     class="jt-select-trigger"
+     [(expanded)]="expanded"
+     [disabled]="disabled()"
+     [preserveContent]="true"
+     [attr.aria-label]="label() || placeholder()">
+  <span class="jt-select-value" [class.jt-select-placeholder]="selectedLabel() === null">
+    {{ selectedLabel() ?? placeholder() }}
+  </span>
+  <mat-icon class="jt-select-arrow" aria-hidden="true">expand_more</mat-icon>
+</div>
+
+<ng-template
+  [cdkConnectedOverlay]="{ origin: combobox.element, usePopover: 'inline', matchWidth: true }"
+  [cdkConnectedOverlayOpen]="expanded()">
+  <ng-template ngComboboxPopup [combobox]="combobox">
+    <div ngListbox ngComboboxWidget #lb="ngListbox"
+         class="jt-popup"
+         [tabindex]="-1"
+         focusMode="activedescendant"
+         selectionMode="explicit"
+         [(value)]="selected"
+         [activeDescendant]="lb.activeDescendant()"
+         (click)="commit()"
+         (keydown.enter)="commit()"
+         (keydown.space)="commit()">
+      @for (option of options(); track option.value) {
+        <div ngOption class="jt-option" [value]="option.value" [label]="option.label" [disabled]="!!option.disabled">
+          <span class="jt-option-label">{{ option.label }}</span>
+          @if (option.value === value()) {
+            <mat-icon class="jt-option-check" aria-hidden="true">check</mat-icon>
+          }
+        </div>
+      }
+    </div>
+  </ng-template>
+</ng-template>

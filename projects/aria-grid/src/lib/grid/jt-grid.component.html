@@ -1,0 +1,122 @@
+@if (selectable() && selectedRows().length > 0) {
+  <div class="bulk-bar" role="toolbar" [attr.aria-label]="labels().bulkActions">
+    <span class="bulk-count">
+      <mat-icon>done_all</mat-icon>
+      {{ labels().selected }}: <strong>{{ selectedRows().length }}</strong>
+    </span>
+    <span class="bulk-spacer"></span>
+    @if (bulkProgress(); as progress) {
+      <span class="bulk-progress" role="status" aria-live="polite">
+        {{ progress.label }}: {{ progress.done }} / {{ progress.total }}
+      </span>
+    }
+    @for (action of bulkActions(); track action.value) {
+      <button matButton="outlined" type="button" class="bulk-action" [class.jt-danger]="action.danger"
+              [disabled]="action.disabled || !!bulkProgress()" (click)="runBulk(action)">
+        <mat-icon>{{ action.icon }}</mat-icon> {{ action.label }}
+      </button>
+    }
+    <button matIconButton type="button" class="bulk-clear" [disabled]="!!bulkProgress()" (click)="clearSelection()"
+            [attr.aria-label]="labels().clearSelection" [matTooltip]="labels().clearSelection">
+      <mat-icon>close</mat-icon>
+    </button>
+    @if (bulkProgress(); as progress) {
+      <mat-progress-bar class="bulk-progress-bar" [mode]="progress.done === 0 ? 'indeterminate' : 'determinate'"
+                        [value]="progress.done / progress.total * 100" />
+    }
+  </div>
+}
+
+@if (rows().length === 0) {
+  @if (emptyMessage()) {
+    <p class="jt-muted empty">{{ emptyMessage() }}</p>
+  }
+} @else {
+  <div class="jt-table-wrap">
+    <table ngGrid class="jt-table jt-grid" [attr.aria-label]="label() || null">
+      <thead>
+        <tr ngGridRow>
+          @if (selectable()) {
+            <th ngGridCell #allCell="ngGridCell" role="columnheader" class="cell-select">
+              <!-- the checkbox is the cell's widget: arrows land on it, Space toggles it; one Tab stop for the whole grid -->
+              <span class="cell-widget" ngGridCellWidget [focusTarget]="checkboxInput">
+              <mat-checkbox [tabIndex]="allCell.active() ? 0 : -1" [checked]="allSelected()" [indeterminate]="someSelected()"
+                            (change)="toggleAll($event.checked)" [aria-label]="labels().selectAll" />
+              </span>
+            </th>
+          }
+          @for (column of columns(); track column.key) {
+            <th ngGridCell role="columnheader" [attr.aria-sort]="ariaSort(column)" [class.cell-end]="column.align === 'end'">
+              @if (column.sort) {
+                <button type="button" class="sort" ngGridCellWidget [class.sort--active]="sort()?.key === column.key"
+                        (click)="toggleSort(column)">
+                  <span [class.cdk-visually-hidden]="column.hiddenLabel">{{ column.label }}</span>
+                  <mat-icon class="sort-icon" [class.sort-icon--desc]="sort()?.key === column.key && sort()?.direction === 'desc'"
+                            aria-hidden="true">arrow_upward</mat-icon>
+                </button>
+              } @else {
+                <span [class.cdk-visually-hidden]="column.hiddenLabel">{{ column.label }}</span>
+              }
+            </th>
+          }
+          @if (hasRowActions()) {
+            <th ngGridCell role="columnheader" class="cell-action">
+              <span class="cdk-visually-hidden">{{ labels().actions }}</span>
+            </th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of visible(); track trackBy()(row); let i = $index) {
+          <tr ngGridRow class="grid-row" [class.grid-row--selected]="isSelected(row)" [class.grid-row--current]="isHighlighted(row)" [style.--jt-row-index]="stagger(i)">
+            @if (selectable()) {
+              <td ngGridCell #rowCell="ngGridCell" class="cell-select">
+                <span class="cell-widget" ngGridCellWidget [focusTarget]="checkboxInput">
+                <mat-checkbox [tabIndex]="rowCell.active() ? 0 : -1" [checked]="isSelected(row)" (change)="toggleRow(row, $event.checked)"
+                              [aria-label]="selectRowLabel(row)" />
+              </span>
+              </td>
+            }
+            @for (column of columns(); track column.key) {
+              <td ngGridCell [class.cell-end]="column.align === 'end'">
+                @if (cells().get(column.key); as cell) {
+                  <ng-container *ngTemplateOutlet="cell; context: { $implicit: row }" />
+                } @else {
+                  {{ $any(row)[column.key] }}
+                }
+              </td>
+            }
+            @if (hasRowActions()) {
+              <td ngGridCell class="cell-action">
+                <!-- several buttons in one cell: Enter goes inside (arrows/Tab between buttons), Escape comes back -->
+                <jt-row-actions ngGridCellWidget widgetType="complex" #actionsWidget="ngGridCellWidget"
+                                [inside]="actionsWidget.isActivated()" (leave)="actionsWidget.deactivate()"
+                                [actions]="actionsOf(row)" [subject]="subjectOf(row)"
+                                 (action)="rowAction.emit({ action: $event, row })" />
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (pager() === 'always' || rows().length > sizeOptions[0].value) {
+    <nav class="pager" [attr.aria-label]="labels().pages">
+      <span class="jt-muted pager-range">{{ range().from }}–{{ range().to }} {{ labels().of }} {{ range().total }}</span>
+      <jt-select class="pager-size" [label]="labels().pageSize" [options]="sizeOptions"
+                     [value]="size()" (valueChange)="setSize($event)" />
+      <span class="pager-buttons">
+        <button matIconButton type="button" [disabled]="page() === 0" (click)="goTo(0)"
+                [attr.aria-label]="labels().first"><mat-icon>first_page</mat-icon></button>
+        <button matIconButton type="button" [disabled]="page() === 0" (click)="goTo(page() - 1)"
+                [attr.aria-label]="labels().previous"><mat-icon>chevron_left</mat-icon></button>
+        <span class="pager-page" aria-live="polite">{{ page() + 1 }} / {{ pages() }}</span>
+        <button matIconButton type="button" [disabled]="page() >= pages() - 1" (click)="goTo(page() + 1)"
+                [attr.aria-label]="labels().next"><mat-icon>chevron_right</mat-icon></button>
+        <button matIconButton type="button" [disabled]="page() >= pages() - 1" (click)="goTo(pages() - 1)"
+                [attr.aria-label]="labels().last"><mat-icon>last_page</mat-icon></button>
+      </span>
+    </nav>
+  }
+}

@@ -1,0 +1,196 @@
+// The grid. The table is .jt-table of the design system; here: sorting, selection, pages and animations
+:host {
+  display: block;
+}
+
+// Selection bar: slides in from the top, glows with the accent
+.bulk-bar {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--jt-space-2);
+  margin-bottom: var(--jt-space-3);
+  padding: var(--jt-space-2) var(--jt-space-3);
+  border: 1px solid color-mix(in srgb, var(--jt-accent) 45%, transparent);
+  border-radius: var(--jt-radius-md);
+  background: color-mix(in srgb, var(--jt-accent) 12%, transparent);
+  box-shadow: var(--jt-glow-accent);
+  animation: jt-grid-bar-in var(--jt-duration-base) var(--jt-easing) both;
+}
+
+.bulk-progress {
+  color: var(--jt-accent-text);
+  font-variant-numeric: tabular-nums;
+}
+
+// Progress strip along the bottom edge of the bar — the bar is its position: relative parent
+.bulk-progress-bar {
+  position: absolute;
+  inset: auto 0 0;
+  border-radius: 0 0 var(--jt-radius-md) var(--jt-radius-md);
+  overflow: hidden;
+}
+
+.bulk-count {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--jt-space-1);
+  color: var(--jt-accent-text);
+
+  strong {
+    display: inline-block;
+    animation: jt-grid-pop var(--jt-duration-base) var(--jt-easing);
+  }
+}
+
+.bulk-spacer {
+  flex: 1;
+}
+
+// Wrapper of a checkbox — the cell's widget (its focus goes to the checkbox input)
+.cell-widget {
+  display: inline-flex;
+}
+
+.empty {
+  padding: var(--jt-space-4) 0;
+}
+
+.cell-select {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.cell-end {
+  text-align: right !important;
+}
+
+.cell-action {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right !important;
+}
+
+// Sortable header: a button over the whole cell, the arrow shows on hover and turns
+.sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  transition: color var(--jt-duration-fast);
+
+  &:hover,
+  &.sort--active {
+    color: var(--jt-accent-text);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-radius: var(--jt-radius-sm);
+    box-shadow: var(--jt-focus-ring);
+  }
+}
+
+.sort-icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity var(--jt-duration-fast), transform var(--jt-duration-base) var(--jt-easing);
+
+  .sort:hover & {
+    opacity: 0.5;
+    transform: none;
+  }
+
+  .sort--active & {
+    opacity: 1;
+    transform: none;
+  }
+
+  &.sort-icon--desc {
+    transform: rotate(180deg);
+  }
+}
+
+// Rows appear in a wave; a selected row is marked with the accent on the left
+.grid-row {
+  animation: jt-grid-row-in var(--jt-duration-slow) var(--jt-easing) backwards;
+  animation-delay: calc(var(--jt-row-index, 0) * 25ms);
+  transition: background-color var(--jt-duration-fast), box-shadow var(--jt-duration-fast);
+}
+
+.grid-row--selected {
+  background: color-mix(in srgb, var(--jt-accent) 14%, transparent);
+  box-shadow: inset 3px 0 0 var(--jt-accent);
+}
+
+.grid-row--current {
+  background: color-mix(in srgb, var(--jt-accent) 8%, transparent);
+}
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--jt-space-3);
+  margin-top: var(--jt-space-3);
+}
+
+.pager-size {
+  width: 110px;
+}
+
+.pager-buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.pager-page {
+  min-width: 56px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes jt-grid-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes jt-grid-bar-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+}
+
+@keyframes jt-grid-pop {
+  50% {
+    transform: scale(1.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grid-row,
+  .bulk-bar,
+  .bulk-count strong {
+    animation: none;
+  }
+
+  .sort-icon {
+    transition: none;
+  }
+}
